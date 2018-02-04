@@ -1,0 +1,75 @@
+package com.mb.golfetto.jumper.elements;
+
+import android.content.Context;
+import android.graphics.Canvas;
+
+import com.mb.golfetto.jumper.engine.Som;
+import com.mb.golfetto.jumper.graphics.Tela;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+
+public class Canos {
+
+    private final List<Cano> canos = new ArrayList<>();
+    private static final int DISTANCIA_ENTRE_CANOS = 400;
+    private static final int QUANTIDADE_DE_CANOS = 10;
+    private Tela tela;
+    private Pontuacao pontuacao;
+    private Context context;
+    private Som som;
+
+    public Canos(Tela tela, Pontuacao pontuacao, Context context, Som som){
+        this.tela = tela;
+        this.pontuacao = pontuacao;
+        this.context = context;
+        this.som = som;
+        int posicao = 400;
+
+        for (int i = 0; i < QUANTIDADE_DE_CANOS;i++){
+            posicao += DISTANCIA_ENTRE_CANOS;
+            Cano cano = new Cano(tela, posicao,context);
+            canos.add(cano);
+        }
+    }
+
+    public void desenhaNo(Canvas canvas) {
+        for(Cano cano : canos){
+            cano.desenhaNo(canvas);
+        }
+    }
+
+    public void move() {
+        ListIterator<Cano> iterator = canos.listIterator();
+        while(iterator.hasNext()){
+            Cano cano = iterator.next();
+            cano.move();
+            if(cano.saiuDaTela()){
+                pontuacao.aumenta();
+                som.toca(Som.PONTOS);
+                iterator.remove();
+                Cano outroCano = new Cano(tela, getMaximo() + DISTANCIA_ENTRE_CANOS, context);
+                iterator.add(outroCano);
+            }
+        }
+    }
+
+    private int getMaximo() {
+        int maximo = 0;
+        for (Cano cano : canos){
+            maximo = Math.max(cano.getPosicao(), maximo);
+        }
+        return maximo;
+    }
+
+    public boolean temColisaoCom(Passaro passaro) {
+        for (Cano cano: canos) {
+            if(cano.temColisaoHorizontalCom(passaro) && cano.temColisaoVerticalCom(passaro)){
+                return true;
+            }
+        }
+        return false;
+    }
+}
